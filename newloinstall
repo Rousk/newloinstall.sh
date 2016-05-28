@@ -1,0 +1,174 @@
+#!/bin/bash
+#
+# newlonstall
+# Removal, installation of a new version libreoffice script
+# Autors - Rousk,Chocobo
+# 23/05/16 - v0.1
+# http://www.mintlinux.ru/blogs/lin-lichka/ustanovka-openoffice-libreoffice-cherez-terminal.html
+# === Changelog ===
+# 23/05/16 - v0.1 (First version)
+# checking architecture and choice available versions with zenity
+#
+# 24/05/16 - v0.2
+# added zenity progressbar based on https://gist.github.com/axidsugar/79f284a4d51a0171eac8
+#
+# 28/05/16 - v0.3 
+# added to the agreement, added removal openoffice, modified point cancellation
+# removed dialogue zenity welcome screen
+DOWNLOAD() {
+  echo $1
+  rand="$RANDOM `date`"
+  pipe="/tmp/pipe.`echo '$rand' | md5sum | tr -d ' -'`"
+  mkfifo $pipe
+  wget -c $1 2>&1 | while read data;do
+    if [ "`echo $data | grep '^Length:'`" ]; then
+      total_size=`echo $data | grep "^Length:" | sed 's/.*\((.*)\).*/\1/' |  tr -d '()'`
+    fi
+    if [ "`echo $data | grep '[0-9]*%' `" ];then
+      percent=`echo $data | grep -o "[0-9]*%" | tr -d '%'`
+      current=`echo $data | grep "[0-9]*%" | sed 's/\([0-9BKMG.]\+\).*/\1/' `
+      speed=`echo $data | grep "[0-9]*%" | sed 's/.*\(% [0-9BKMG.]\+\).*/\1/' | tr -d ' %'`
+      remain=`echo $data | grep -o "[0-9A-Za-z]*$" `
+      echo $percent
+      echo "#Скачивается $1\n$current готово ($percent%)\nСкорость : $speed/сек\nОсталось времени : $remain"
+    fi
+  done > $pipe &
+ 
+  wget_info=`ps ax |grep "wget.*$1" |awk '{print $1"|"$2}'`
+  wget_pid=`echo $wget_info|cut -d'|' -f1 `
+ 
+  zenity --progress --auto-close --text="Соединение с $1\n\n\n" --width="350" --title="Загрузка"< $pipe
+  if [ "`ps -A |grep "$wget_pid"`" ];then
+    kill $wget_pid
+    zenity --info --text="Выполнена отмена или случилась непредвиденная ошибка.\nРабота инструмента прекращена." --title="Завершение" --width="350"
+    exit
+  fi
+  rm -f $pipe
+}
+ 
+ 
+rm -rf /tmp/LO/
+MACHINE_TYPE=`uname -m`
+if [ ${MACHINE_TYPE} == 'x86_64' ]; then
+  ARCH=x86_64
+  ARCH2=x86-64
+else
+  ARCH=x86
+  ARCH2=x86
+fi
+
+mkdir -p /tmp/LO/{download,deb,readme} && cd /tmp/LO/readme
+cat > readme.txt << "EOF"
+NewLOinstall
+Приветствуем Вас !
+Этот инструмент полностью свободный, предоставляется 
+абсолютно без каких-либо гарантий !
+CAUTION! Run only as root
+ВНИМАНИЕ! Запуск программы только от root.
+Требуется запускать инструмент только от root
+для его коректной работы.
+Если скрипт был запущен не от root, сделайте отмену и перезапустите скрипт от root.
+Общая информация:
+1.Инструмент будет работать в дистрибутивах, таких как: 
+Ubuntu, Linux Mint.
+Зависимые пакеты: "zenity"
+2. Предназначение:
+Установка новой версии libreoffice.
+Если libreoffice не установлен, скрипт NewLOinstall установит libreoffice из выбранной вами версий, предложенных в процессе установки из существующих версий которые доступны с официального сайта.
+Если libreoffice или openoffice установлен в настоящий момент, скрипт NewLOinstall удалит установленные пакеты libreoffice или openoffice и установит из выбранной вами версий libreoffice, предложенных в процессе установки из существующих версий которые доступны с официального сайта.
+3. Работа скрипта:
+Скрипт NewLOinstall последовательно применяет действия для установки libreoffice.
+1. Создание временных каталогов и файлов.
+2. Удаление (если установлено) libreoffice/openoffice.
+3. Скачивание с официального сайта базового архива, langpack_ru.tar.gz и helppack_ru.tar.gz архивов.
+4. Распаковка скаченных архивов.
+5. Установка.
+6. Удаление созданного временного каталога /tmp/LO/deb с его содержимым.
+Примечание:
+После установки, скаченные архивы и распакованные файлы а так же данное соглашение, остаются в каталоге /tmp/LO/download и /tmp/LO/readme
+Оставить или удалить их оставлено на ваше усмотрение.
+
+EOF
+zenity --width=570 --height=600 --text-info \
+       --title="Соглашение" \
+       --filename="/tmp/LO/readme/readme.txt" \
+       --checkbox="Я прочитал'(а) и принимаю условия."
+case $? in
+    0)
+        echo "Start installation!"
+         next step
+	;;
+    1)
+        echo "Stop installation! "
+        exit 1 
+	;;
+    -1)
+        echo "An unexpected error has occurred."
+	;;
+esac
+zenity --info --text="Насколько мы сумели определить - подойдёт $ARCH-битная версия. \n\n Следующий шаг выбор версии... "
+wget -qO- download.documentfoundation.org/libreoffice/stable/ | grep -o '[0-9]\.[0-9]\.[0-9]' | uniq > /tmp/lo_v_a
+VERSION=`cat /tmp/lo_v_a | \
+         sed 's/^/FALSE\n/g' | \
+         zenity --width=350 --height=250  --list --radiolist --separator=' ' \
+                --title="Выбор версии" \
+                --text="Пожалуйста выберите версию:" --column="Отметить" --column="Доступные версии"`
+
+case $? in
+    0)
+        echo "Start installation!"
+         next step
+	;;
+    1)
+        echo "Stop installation! "
+        exit 1 
+	;;
+    -1)
+        echo "An unexpected error has occurred."
+	;;
+esac
+( 
+cd /tmp/LO/download
+echo "10" ; sleep 1
+echo "# Инициализация" ; sleep 1
+sudo apt-get autoremove --purge -y libreoffice* && sudo dpkg --configure -a && sudo apt-get autoremove --purge -y openoffice*
+dllink_base=http://download.documentfoundation.org/libreoffice/stable/$VERSION/deb/$ARCH/LibreOffice_$VERSION\_Linux_$ARCH2\_deb.tar.gz
+DOWNLOAD "$dllink_base"
+dllink_lang=http://download.documentfoundation.org/libreoffice/stable/$VERSION/deb/$ARCH/LibreOffice_$VERSION\_Linux_$ARCH2\_deb_langpack_ru.tar.gz
+DOWNLOAD "$dllink_lang"
+dllink_help=http://download.documentfoundation.org/libreoffice/stable/$VERSION/deb/$ARCH/LibreOffice_$VERSION\_Linux_$ARCH2\_deb_helppack_ru.tar.gz
+DOWNLOAD "$dllink_help"
+echo "65" ; sleep 1
+echo "# Распаковка архивов" ; sleep 1
+tar -xvf LibreOffice_$VERSION\_Linux_$ARCH2\_deb.tar.gz
+tar -xvf LibreOffice_$VERSION\_Linux_$ARCH2\_deb_langpack_ru.tar.gz
+tar -xvf LibreOffice_$VERSION\_Linux_$ARCH2\_deb_helppack_ru.tar.gz
+find /tmp/LO/download/ -name *.deb -exec mv -t /tmp/LO/deb/ {} +
+cd /tmp/LO/deb/
+echo "75" ; sleep 1
+echo "# Установка libreoffice" ; sleep 1
+sudo dpkg --install *.deb
+echo "95" ; sleep 1
+echo "# Завершение" ; sleep 1
+rm -rf /tmp/LO/deb
+echo "100" ; sleep 1
+echo "# Готово" ; sleep 1
+) |
+zenity --width=350 --height=150 --progress \
+       --title="Установка new version libreoffice" \
+       --text="Установка пакетов. Ждите..." \
+       --percentage=0
+
+case $? in
+    0)
+        echo "Start installation!"
+         next step
+	;;
+    1)
+        echo "Stop installation! "
+        exit 1 
+	;;
+    -1)
+        echo "An unexpected error has occurred."
+	;;
+esac
