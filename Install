@@ -1,0 +1,3 @@
+Файл newloinstall.sh сделать исполняемым и поместить в /usr/bin
+Файл NewLOinstall.desktop дать права на чтение и поместить в /usr/share/applications
+Файл newloinstall.svg дать права на чтение и поместить и поместить в /usr/share/icons/hicolor/scalable/apps
