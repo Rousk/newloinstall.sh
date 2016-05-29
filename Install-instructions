@@ -1,6 +1,7 @@
-Файл newloinstall.sh сделать исполняемым и поместить в /usr/bin
+Файл newloinstall сделать исполняемым и поместить в /usr/bin
 Файл NewLOinstall.desktop дать права на чтение и поместить в /usr/share/applications
 Файл newloinstall.svg дать права на чтение и поместить в /usr/share/icons/hicolor/scalable/apps
 После размещения файлов, запускается файл NewLOinstall.desktop, он должен появится в меню 
-разделе Офис и Системные, под именем "Установка новой версии LO"
+разделе Офис, под именем "Установка новой версии LO"
+Готовый deb пакет доступен поссылке https://yadi.sk/d/jI8bbrNHs5u2A
 
