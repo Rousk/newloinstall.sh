@@ -3,5 +3,5 @@
 Файл newloinstall.svg дать права на чтение и поместить в /usr/share/icons/hicolor/scalable/apps
 После размещения файлов, запускается файл NewLOinstall.desktop, он должен появится в меню 
 разделе Офис, под именем "Установка новой версии LO"
-Готовый deb пакет доступен поссылке https://yadi.sk/d/jI8bbrNHs5u2A
+Готовый newloinstall_1.3-0_all.deb пакет доступен поссылке https://yadi.sk/d/RHWQ7P2as5vBh
 
