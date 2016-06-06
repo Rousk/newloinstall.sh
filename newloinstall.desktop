@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=NewLOinstall
+Name[ru]=Установка новой версии LO
+Comment=Install, upgrade your office suite LibreOffice
+Comment[ru]=Установить, обновить офисный пакет LibreOffice
+Exec=gksudo /usr/bin/newloinstall
+Icon=/usr/share/icons/hicolor/scalable/apps/newloinstall.svg
+Terminal=false
+Type=Application
+Encoding=UTF-8
+Categories=Office;
+NotShowIn=KDE;
+StartupNotify=true
+Keywords=dpkg;install
