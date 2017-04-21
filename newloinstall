@@ -65,28 +65,20 @@ fi
 mkdir -p /tmp/LO/{download,deb,readme} && cd /tmp/LO/readme
 cat > readme.txt << "EOF"
 NewLOinstall
-Приветствуем Вас !
+NewLOinstall
 Этот инструмент полностью свободный, предоставляется 
 абсолютно без каких-либо гарантий !
-Общая информация:
-1.Инструмент будет работать в дистрибутивах, таких как: 
-Ubuntu, Linux Mint.
-Зависимые пакеты: "zenity"
-2. Предназначение:
-Установка новой версии libreoffice.
-Если libreoffice не установлен, скрипт NewLOinstall установит libreoffice из выбранной вами версий, предложенных в процессе установки из существующих версий которые доступны с официального сайта.
+Предназначение:
+Установка libreoffice.
 Если libreoffice или openoffice установлен в настоящий момент, скрипт NewLOinstall удалит установленные пакеты libreoffice или openoffice и установит из выбранной вами версий libreoffice, предложенных в процессе установки из существующих версий которые доступны с официального сайта.
-3. Работа скрипта:
+Работа скрипта:
 Скрипт NewLOinstall последовательно применяет действия для установки libreoffice.
 1. Создание временных каталогов и файлов.
 2. Удаление (если установлено) libreoffice/openoffice.
-3. Скачивание с официального сайта базового архива, langpack_ru.tar.gz и helppack_ru.tar.gz архивов.
+3. Скачивание с официального сайта базового архива libreoffice, langpack_ru.tar.gz и helppack_ru.tar.gz архивов.
 4. Распаковка скаченных архивов.
 5. Установка.
-6. Удаление созданного временного каталога /tmp/LO/deb с его содержимым.
-Примечание:
-После установки, скаченные архивы и распакованные файлы а так же данное соглашение, остаются в каталоге /tmp/LO/download и /tmp/LO/readme
-Оставить или удалить их оставлено на ваше усмотрение.
+6. Удаление созданного временного каталога /tmp/LO/ с его содержимым, для экономии вашего дискового пространства.
 
 EOF
 zenity --width=570 --height=600 --text-info \
@@ -106,7 +98,6 @@ case $? in
         echo "An unexpected error has occurred."
 	;;
 esac
-zenity --info --text="Насколько мы сумели определить - подойдёт $ARCH-битная версия. \n\n Следующий шаг выбор версии... "
 wget -qO- download.documentfoundation.org/libreoffice/stable/ | grep -o '[0-9]\.[0-9]\.[0-9]' | uniq > /tmp/lo_v_a
 VERSION=`cat /tmp/lo_v_a | \
          sed 's/^/FALSE\n/g' | \
@@ -150,7 +141,8 @@ echo "# Установка libreoffice" ; sleep 1
 sudo dpkg --install *.deb
 echo "95" ; sleep 1
 echo "# Завершение" ; sleep 1
-rm -rf /tmp/LO/deb
+rm -Rf /tmp/LO
+rm -f /tmp/lo_v_a
 echo "100" ; sleep 1
 echo "# Готово" ; sleep 1
 ) |
